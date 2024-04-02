@@ -78,6 +78,8 @@ def simulate_transaction(env, G, source, destination, amount, alpha):
             htlc_bid.unlock(success=True)
             print(f"{env.now}: HTLC-bid unlocked for {node}")
 
-    # Update the network state for success here
-    # Note: Implement the logic to handle and unlock HTLC-bids on transaction failure
-
+env = simpy.Environment()
+pcn_network = create_pcn_network()
+alpha = 0.1  # Example security deposit ratio
+env.process(simulate_transaction(env, pcn_network, 'A', 'D', 100, alpha))
+env.run()
