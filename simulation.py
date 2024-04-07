@@ -1,11 +1,6 @@
-import networkx as nx
 import simpy
-import numpy as np
-import random
 from htlc import HTLCBid
 from pcnn import PCNN
-import sys
-sys.setrecursionlimit(2500)
 
 
 def example_distribution_F(pvi):
@@ -18,7 +13,7 @@ def notification(env, G, current_node, destination, amount, alpha):
     if destination in G.neighbors(current_node):
         # Assuming preimage is somehow retrieved or validated here
         print(f"{env.now}: Direct connection to destination {destination} from {current_node}. Transaction successful.")
-        return True, "preimage"  # Simplification for demonstration
+        return True, "preimage"  
     else:
         bids = bidding(G, current_node, amount, alpha)
         if bids:
