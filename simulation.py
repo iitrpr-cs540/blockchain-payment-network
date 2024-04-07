@@ -3,18 +3,10 @@ import simpy
 import numpy as np
 import random
 from htlc import HTLCBid
+from pcnn import PCNN
+import sys
+sys.setrecursionlimit(2500)
 
-def create_pcn_network():
-    G = nx.DiGraph()
-    G.add_edge('A', 'B', balane=10, success_probability=0.3, preimage=None)
-    G.add_edge('B', 'A', balane=10, success_probability=0.3, preimage=None)
-
-    G.add_edge('B', 'C', balance=10, success_probability=0.5, preimage=None)
-    G.add_edge('C', 'B', balane=10, success_probability=0.3, preimage=None)
-    
-    G.add_edge('C', 'D', balance=10, success_probability=0.8, preimage=None) 
-    G.add_edge('D', 'C', balane=10, success_probability=0.3, preimage=None)
-    return G
 
 def example_distribution_F(pvi):
     return pvi
@@ -52,17 +44,12 @@ def bidding(G, node, amount, alpha):
         bids.append((bid_value, neighbor, htlc_bid))
     return bids
 
-
-
 def outsourcing(env, G, current_node, destination, amount, alpha, bids):
     best_bid, best_neighbor, best_htlc_bid = min(bids, key=lambda x: x[0])
     print(f"{env.now}: Node {current_node} selects Node {best_neighbor} with bid {best_bid}")
     best_htlc_bid.lock() 
     success, preimage = notification(env, G, best_neighbor, destination, amount, alpha)
     return success, preimage
-
-
-
 
 def simulate_transaction(env, G, source, destination, amount, alpha):
     success, preimage = notification(env, G, source, destination, amount, alpha)
@@ -73,9 +60,9 @@ def simulate_transaction(env, G, source, destination, amount, alpha):
         print(f"{env.now}: Transaction failed to reach {destination} from {source}.")
 
 
-
 env = simpy.Environment()
-pcn_network = create_pcn_network()
+pcnn = PCNN()
+pcn_network = pcnn.G
 alpha = 0.1  # Example security deposit ratio
 env.process(simulate_transaction(env, pcn_network, 'A', 'D', 100, alpha))
 env.run()
