@@ -76,3 +76,15 @@ class Transaction:
             bid = self.stack.pop()
             bid.reject(self.network.payment_channels[self.tx_id])
         print(f"{self.network.env.now}: Transaction failed to reach {self.dest} from {self.src}.")
+
+    def execute_tx(self):
+        hop_success, has_ended = self.next_hop()
+        if not hop_success:
+            self.reject()
+            return
+        while not has_ended:
+            hop_success, has_ended = self.next_hop()
+            if not hop_success:
+                self.reject()
+                return
+        self.resolve()
