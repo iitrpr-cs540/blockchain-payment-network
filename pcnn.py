@@ -46,6 +46,6 @@ class PCNN:
         self.node_probabilities[source] = NodeProbabilities(source)
         self.node_probabilities[destination] = NodeProbabilities(destination)
 
-    def get_bid_for_node(self, node, destination):
+    def get_bid_for_node(self, node, destination) -> float:
         # (1 - prob)^(K-1)
         return (1 - self.node_probabilities[node].get_probability(destination)) ** (len(self.G.successors(node)) - 1)
