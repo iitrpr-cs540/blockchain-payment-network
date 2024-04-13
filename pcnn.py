@@ -1,19 +1,50 @@
 import networkx as nx
 import numpy as np
 
+class NodeProbabilities:
+    def __init__(self, node):
+        self.node = node
+        self.successes = {}
+
+    def chosen(self, destination):
+        if destination in self.successes:
+            self.successes[destination]["chosen"] += 1
+        else:
+            self.successes[destination] = {"chosen": 1, "successes": 0}
+    
+    def get_probability(self, destination):
+        if (destination in self.probabilities):
+            return self.probabilities[destination]["successes"] / self.probabilities[destination]["chosen"]
+        else:
+            return 1
+    
+    def add_successes(self, destination):
+        self.successes[destination]["successes"] += 1
+
 class PCNN:
+    G: nx.DiGraph
+    node_probabilities: dict[str, NodeProbabilities] = {}
 
     def __init__(self):
-        self.G = self.create_pcn_network()
+        self.G = G = nx.DiGraph()
+        self.payment_channels = {}
 
-    def create_pcn_network(self):
-        G = nx.DiGraph()
-        G.add_edge('A', 'B', balance=10, success_probability=0.3, preimage=None)
-        G.add_edge('B', 'A', balance=10, success_probability=0.3, preimage=None)
+    def add_payment_channel(self, source: str, destination: str, deposit: int):
+        channel_id = "-".join(sorted([source, destination]))
+        print("Adding channel", channel_id)
+        if channel_id in self.payment_channels:
+            print("Channel already exists")
+            return
+        self.payment_channels[channel_id] = {
+            source: deposit,
+            destination: deposit
+        }
+        self.G.add_edge(destination, source)
+        self.G.add_edge(source, destination)
 
-        G.add_edge('B', 'C', balance=10, success_probability=0.5, preimage=None)
-        G.add_edge('C', 'B', balance=10, success_probability=0.3, preimage=None)
-        
-        G.add_edge('C', 'D', balance=10, success_probability=0.8, preimage=None) 
-        G.add_edge('D', 'C', balance=10, success_probability=0.3, preimage=None)
-        return G
+        self.node_probabilities[source] = NodeProbabilities(source)
+        self.node_probabilities[destination] = NodeProbabilities(destination)
+
+    def get_bid_for_node(self, node, destination):
+        # (1 - prob)^(K-1)
+        return (1 - self.node_probabilities[node].get_probability(destination)) ** (len(self.G.successors(node)) - 1)
