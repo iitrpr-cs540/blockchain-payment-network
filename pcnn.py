@@ -24,6 +24,7 @@ class NodeProbabilities:
 class PCNN:
     G: nx.DiGraph
     node_probabilities: dict[str, NodeProbabilities] = {}
+    payment_channels: dict[str, dict[str, int]]
 
     def __init__(self):
         self.G = G = nx.DiGraph()
