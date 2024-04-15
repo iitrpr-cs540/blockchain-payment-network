@@ -2,33 +2,31 @@ import networkx as nx
 import numpy as np
 
 class NodeProbabilities:
-    def __init__(self, node):
-        self.node = node
-        self.successes = {}
+    def __init__(self, node_id: str):
+        self.node_id = node_id
+        self.success_count = {}
+        self.total_count = {}
 
-    def chosen(self, destination):
-        if destination in self.successes:
-            self.successes[destination]["chosen"] += 1
-        else:
-            self.successes[destination] = {"chosen": 1, "successes": 0}
-    
-    def get_probability(self, destination):
-        if (destination in self.probabilities):
-            return self.probabilities[destination]["successes"] / self.probabilities[destination]["chosen"]
-        else:
-            return 1
-    
-    def add_successes(self, destination):
-        self.successes[destination]["successes"] += 1
+    def get_probability(self, destination: str) -> float:
+        if destination not in self.total_count or self.total_count[destination] == 0:
+            return 0.5  # 50% success probability if no transactions have occurred
+        return self.success_count.get(destination, 0) / self.total_count[destination]
+
+    def update_probabilities(self, destination: str, success: bool):
+        if destination not in self.total_count:
+            self.total_count[destination] = 20
+            self.success_count[destination] = 10
+        
+        self.total_count[destination] += 1
+        if success:
+            self.success_count[destination] += 1
+
 
 class PCNN:
-    G: nx.DiGraph
-    node_probabilities: dict[str, NodeProbabilities] = {}
-    payment_channels: dict[str, dict[str, int]]
-
     def __init__(self):
-        self.G = G = nx.DiGraph()
+        self.G = nx.DiGraph()
         self.payment_channels = {}
+        self.node_probabilities = {}
 
     def add_payment_channel(self, source: str, destination: str, deposit: int):
         channel_id = "-".join(sorted([source, destination]))
@@ -36,15 +34,31 @@ class PCNN:
         if channel_id in self.payment_channels:
             print("Channel already exists")
             return
+        
         self.payment_channels[channel_id] = {
             source: deposit,
             destination: deposit
         }
+
         self.G.add_edge(destination, source)
         self.G.add_edge(source, destination)
 
-        self.node_probabilities[source] = NodeProbabilities(source)
-        self.node_probabilities[destination] = NodeProbabilities(destination)
+        if source not in self.node_probabilities:
+            self.node_probabilities[source] = NodeProbabilities(source)
+        if destination not in self.node_probabilities:
+            self.node_probabilities[destination] = NodeProbabilities(destination)
+        
+    def get_probability(self, source: str, destination: str) -> float:
+        if source in self.node_probabilities:
+            return self.node_probabilities[source].get_probability(destination)
+        else:
+            raise ValueError(f"No record for node {source}")
+        
+    def update_transaction_success(self, source: str, destination: str, success: bool):
+        if source in self.node_probabilities:
+            self.node_probabilities[source].update_probabilities(destination, success)
+        else:
+            print(f"No probability record for node {source}")
 
     def get_bid_for_node(self, node, destination) -> float:
         # (1 - prob)^(K-1)
