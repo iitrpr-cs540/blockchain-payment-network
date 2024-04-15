@@ -50,23 +50,23 @@ def outsourcing(pcnn, current_node, destination, amount, alpha, bids, selected_b
     # print("Debug ", bids)
     best_bid, best_neighbor, best_htlc_bid = bids[0]
     # Check if best neigbor is already in selected_bids_dict
-    while (best_neighbor in [htlc_bid.src for htlc_bid in selected_bids_dict]):
-        if(len(bids)>1):
-            # print("Debug", bids)
-            bids.remove((best_bid, best_neighbor, best_htlc_bid))
-            # print("Debug", bids)
-            best_bid, best_neighbor, best_htlc_bid = bids[0]
-            # print(best_bid, best_neighbor, best_htlc_bid, current_node)
-        else:
-            # Print transaction failed to reach destination
-            print(f"Transaction failed to reached {destination} from {current_node}.")
-            print("Transaction failed due to wrong path. Updating Probabilities.")
-            pcnn.update_transaction_success(current_node, destination, False)
-            # print("Debug", current_node, pcnn.node_probabilities[current_node].success_count[destination], pcnn.node_probabilities[current_node].total_count[destination])
-            # remove last entry from selected_bids_dict
-            selected_bids_dict[-1].reject(pcnn.payment_channels)
-            selected_bids_dict.pop()
-            return notification(pcnn,selected_bids_dict[-1].dest, destination, amount, alpha, selected_bids_dict=selected_bids_dict)
+    # while (best_neighbor in [htlc_bid.src for htlc_bid in selected_bids_dict]):
+    #     if(len(bids)>1):
+    #         # print("Debug", bids)
+    #         bids.remove((best_bid, best_neighbor, best_htlc_bid))
+    #         # print("Debug", bids)
+    #         best_bid, best_neighbor, best_htlc_bid = bids[0]
+    #         # print(best_bid, best_neighbor, best_htlc_bid, current_node)
+    #     else:
+    #         # Print transaction failed to reach destination
+    #         print(f"Transaction failed to reached {destination} from {current_node}.")
+    #         print("Transaction failed due to wrong path. Updating Probabilities.")
+    #         pcnn.update_transaction_success(current_node, destination, False)
+    #         # print("Debug", current_node, pcnn.node_probabilities[current_node].success_count[destination], pcnn.node_probabilities[current_node].total_count[destination])
+    #         # remove last entry from selected_bids_dict
+    #         selected_bids_dict[-1].reject(pcnn.payment_channels)
+    #         selected_bids_dict.pop()
+    #         return notification(pcnn,selected_bids_dict[-1].dest, destination, amount, alpha, selected_bids_dict=selected_bids_dict)
     print(f"Node {current_node} selects Node {best_neighbor} with bid {best_bid}")
     selected_bids_dict.append(best_htlc_bid)
     # for each entry in selected_bids_dict we check if hop count has excedded the max_hop_count
@@ -108,6 +108,8 @@ pcnn.add_payment_channel('B', 'D', deposit=10)
 pcnn.add_payment_channel('C', 'D', deposit=10)
 pcnn.add_payment_channel('D', 'E', deposit=10)
 pcnn.add_payment_channel('E', 'F', deposit=10)
+pcnn.add_payment_channel('C', 'G', deposit=10)
+pcnn.add_payment_channel('C', 'E', deposit=10)
 
 alpha = 0.1
 selected_bids_dict = []
