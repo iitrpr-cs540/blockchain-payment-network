@@ -13,8 +13,8 @@ class HTLCBid:
     def resolve(self, payment_channel):
         self.state = 'completed'
         channel_id = "-".join(sorted([self.src, self.dest]))
-        payment_channel[channel_id][self.src] -= self.amount
-        payment_channel[channel_id][self.dest] += self.amount
+        payment_channel[channel_id][self.src] -= self.amount+self.transaction_fee
+        payment_channel[channel_id][self.dest] += self.amount+self.transaction_fee
 
     def reject(self, payment_channel):
         self.state = 'rejected'
