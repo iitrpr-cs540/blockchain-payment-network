@@ -19,5 +19,5 @@ class HTLCBid:
     def reject(self, payment_channel):
         self.state = 'rejected'
         channel_id = "-".join(sorted([self.src, self.dest]))
-        payment_channel[channel_id][self.src] -= self.security_deposit
-        payment_channel[channel_id][self.dest] += self.security_deposit
+        payment_channel[channel_id][self.src] += self.security_deposit
+        payment_channel[channel_id][self.dest] -= self.security_deposit

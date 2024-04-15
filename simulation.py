@@ -23,6 +23,9 @@ def notification(pcnn, current_node, destination, amount, alpha, selected_bids_d
             return success
         else:
             print(f"No bids received by {current_node}. Transaction failed.")
+            for htlc_bid in selected_bids_dict[::-1]:
+                htlc_bid.reject(pcnn.payment_channels)
+                pcnn.update_transaction_success(htlc_bid.src, destination, False)
             return False
 
 
@@ -61,6 +64,7 @@ def outsourcing(pcnn, current_node, destination, amount, alpha, bids, selected_b
             pcnn.update_transaction_success(current_node, destination, False)
             # print("Debug", current_node, pcnn.node_probabilities[current_node].success_count[destination], pcnn.node_probabilities[current_node].total_count[destination])
             # remove last entry from selected_bids_dict
+            selected_bids_dict[-1].reject(pcnn.payment_channels)
             selected_bids_dict.pop()
             return notification(pcnn,selected_bids_dict[-1].dest, destination, amount, alpha, selected_bids_dict=selected_bids_dict)
     print(f"Node {current_node} selects Node {best_neighbor} with bid {best_bid}")
@@ -71,9 +75,12 @@ def outsourcing(pcnn, current_node, destination, amount, alpha, bids, selected_b
         hops = len(selected_bids_dict)-selected_bids_dict.index(htlc_bid)
         if hops >= htlc_bid.max_hop_count:
             # remove all bids from this index to the end of the list
+            for i in range(selected_bids_dict.index(htlc_bid), len(selected_bids_dict)):
+                selected_bids_dict[i].reject(pcnn.payment_channels)
+                pcnn.update_transaction_success(selected_bids_dict[i].src, destination, False)
             selected_bids_dict = selected_bids_dict[:selected_bids_dict.index(htlc_bid)]
-            htlc_bid.reject(pcnn.payment_channels)
-            pcnn.update_transaction_success(htlc_bid.dest, destination, False)
+            # htlc_bid.reject(pcnn.payment_channels)
+            # pcnn.update_transaction_success(htlc_bid.dest, destination, False)
             print(f"Transaction failed to reach {destination} from {current_node}.")
             print("Transaction failed due to hop count.")
             return notification(pcnn, htlc_bid.src, destination, amount, alpha, selected_bids_dict=selected_bids_dict)
