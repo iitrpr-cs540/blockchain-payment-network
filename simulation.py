@@ -1,3 +1,4 @@
+from graphToPCNN import generate_PCNN_from_graph
 import simpy
 from htlc import HTLCBid
 from pcnn import PCNN
@@ -99,20 +100,32 @@ def simulate_transaction(pcnn, source, destination, amount, alpha, selected_bids
 
 
 
-pcnn = PCNN()
 
-# Create a simple network with 6 nodes and some edges
-pcnn.add_payment_channel('A', 'B', deposit=10)
-pcnn.add_payment_channel('A', 'C', deposit=10)
-pcnn.add_payment_channel('B', 'D', deposit=10)
-pcnn.add_payment_channel('C', 'D', deposit=10)
-pcnn.add_payment_channel('D', 'E', deposit=10)
-pcnn.add_payment_channel('E', 'F', deposit=10)
-
+num_nodes = int(input("Enter number of nodes: "))
+num_edges = int(input("Enter number of edges: "))
+pcnn = generate_PCNN_from_graph(num_nodes, num_edges)
 alpha = 0.1
 selected_bids_dict = []
+print("Enter source and destination nodes for transaction.")
+source = input("Enter source node: ")
+destination = input("Enter destination node: ")
+amount = float(input("Enter amount to be transferred: "))
+simulate_transaction(pcnn, source, destination, amount, alpha, selected_bids_dict)
 
-simulate_transaction(pcnn, 'A', 'F', 10, alpha, selected_bids_dict)
+# pcnn = PCNN()
+
+# # Create a simple network with 6 nodes and some edges
+# pcnn.add_payment_channel('A', 'B', deposit=10)
+# pcnn.add_payment_channel('A', 'C', deposit=10)
+# pcnn.add_payment_channel('B', 'D', deposit=10)
+# pcnn.add_payment_channel('C', 'D', deposit=10)
+# pcnn.add_payment_channel('D', 'E', deposit=10)
+# pcnn.add_payment_channel('E', 'F', deposit=10)
+
+# alpha = 0.1
+# selected_bids_dict = []
+
+# simulate_transaction(pcnn, 'A', 'F', 10, alpha, selected_bids_dict)
 
 
 
