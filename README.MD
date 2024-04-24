@@ -12,5 +12,11 @@
     pip install -r requirements.txt
 ```
 
+2. Create graphs
+
+```
+    python generate_graph.py (for generating a single graph)
+    python automate_graph_gen.py (for generating multiple graphs)
+```
 
 Run simulation.py
