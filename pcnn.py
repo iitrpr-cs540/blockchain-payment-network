@@ -1,7 +1,9 @@
 import networkx as nx
 import numpy as np
 
+########### TOGGLE THIS VARIABLE TO SWITCH BETWEEN ADDITIVE AND MULTIPLICATIVE INCREMENT ###########
 additive_incerment = True
+######################################################################################################
 
 class NodeProbabilities:
     def __init__(self, node_id: str):

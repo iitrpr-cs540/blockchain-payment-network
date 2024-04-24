@@ -4,6 +4,10 @@ from htlc import HTLCBid
 from pcnn import PCNN
 import pandas as pd
 
+###### TOGGLE THIS VARIABLE TO GIVE SECOND CHANCE TO THE TRANSACTION ######
+give_second_chance = True
+###########################################################################
+
 def example_distribution_F(pvi):
     return pvi
 
@@ -11,6 +15,9 @@ def calculate_bid(pvi, K, alpha):
     return (1 - example_distribution_F(pvi)) ** (K - 1) / (1 + alpha)
 
 def notification(pcnn, current_node, destination, amount, alpha, selected_bids_dict, stats):
+    '''
+        Node starts the auction and notifies the neighbors about the transaction.
+    '''
     if destination in pcnn.G.neighbors(current_node):
         print(f"Direct connection to destination {destination} from {current_node}. Transaction successful.")
         # Remove the htlcs from selected_bids_dict one by one starting from last index
@@ -18,24 +25,28 @@ def notification(pcnn, current_node, destination, amount, alpha, selected_bids_d
             htlc_bid.resolve(pcnn.payment_channels)
             pcnn.update_transaction_success(htlc_bid.src, destination, True)
             stats['propability_updates'] += 1
-        return True; 
+        return True, 0
     else:
         stats['total_bidding'] += 1
         bids = bidding(pcnn, current_node, destination, amount, alpha)
         if bids:
             stats['total_outsourcing'] += 1
-            success= outsourcing(pcnn, current_node, destination, amount, alpha, bids, selected_bids_dict, stats)
-            return success
+            success, flag_retry = outsourcing(pcnn, current_node, destination, amount, alpha, bids, selected_bids_dict, stats)
+            return success, flag_retry
         else:
             print(f"No bids received by {current_node}. Transaction failed.")
             for htlc_bid in selected_bids_dict[::-1]:
                 htlc_bid.reject(pcnn.payment_channels)
                 pcnn.update_transaction_success(htlc_bid.src, destination, False)
                 stats['propability_updates'] += 1
-            return False
+                stats['failed_transactions'] += 1
+            return False, 0
 
 
 def bidding(pcnn, node, destination, amount, alpha):
+    '''
+        Generates bids for the neighbors of the node.
+    '''
     neighbors = list(pcnn.G.successors(node))
     K = len(neighbors)
     bids = []
@@ -52,6 +63,9 @@ def bidding(pcnn, node, destination, amount, alpha):
     return bids
 
 def outsourcing(pcnn, current_node, destination, amount, alpha, bids, selected_bids_dict, stats):
+    '''
+        Selects the best bid out of the bids and notifies the next node about the transaction.
+    '''
     # sort the bids in ascending order of bid_value
     bids.sort(key=lambda x: x[0])
     # print("Debug ", bids)
@@ -59,23 +73,37 @@ def outsourcing(pcnn, current_node, destination, amount, alpha, bids, selected_b
     # Check if best neigbor is already in selected_bids_dict
     while (best_neighbor in [htlc_bid.src for htlc_bid in selected_bids_dict]):
         if(len(bids)>1):
-            # print("Debug", bids)
+            # remove the best bid from the list, since it is already selected
             bids.remove((best_bid, best_neighbor, best_htlc_bid))
-            # print("Debug", bids)
+            # select the next best bid
             best_bid, best_neighbor, best_htlc_bid = bids[0]
-            # print(best_bid, best_neighbor, best_htlc_bid, current_node)
         else:
-            # Print transaction failed to reach destination
+            # Now, no more bids are left to select, So we reject the last selected bid and update the probabilities
             print(f"Transaction failed to reached {destination} from {current_node}.")
             print("Transaction failed due to wrong path. Updating Probabilities.")
             pcnn.update_transaction_success(current_node, destination, False)
             stats['propability_updates'] += 1
-            # print("Debug", current_node, pcnn.node_probabilities[current_node].success_count[destination], pcnn.node_probabilities[current_node].total_count[destination])
-            # remove last entry from selected_bids_dict
-            selected_bids_dict[-1].reject(pcnn.payment_channels)
             stats['failed_transactions'] += 1
-            selected_bids_dict.pop()
-            return notification(pcnn,selected_bids_dict[-1].dest, destination, amount, alpha, selected_bids_dict=selected_bids_dict, stats = stats)
+
+            if give_second_chance:
+                # remove last entry from selected_bids_dict (because it lead to a failed transaction)
+                selected_bids_dict[-1].reject(pcnn.payment_channels)
+                selected_bids_dict.pop()
+                
+                # Again, trying to reach the destination from the last node in the selected_bids_dict
+                return notification(pcnn,selected_bids_dict[-1].dest, destination, amount, alpha, selected_bids_dict=selected_bids_dict, stats = stats)
+            else:
+                # remove all bids
+                source = selected_bids_dict[0].src
+                for htlc_bid in selected_bids_dict:
+                    htlc_bid.reject(pcnn.payment_channels)
+                    pcnn.update_transaction_success(htlc_bid.src, destination, False)
+                    stats['propability_updates'] += 1
+                    stats['failed_transactions'] += 1
+                selected_bids_dict = []
+                # for this I am returning a flag 1, to notify that we need to retry again from the source node
+                return False, 1
+
     print(f"Node {current_node} selects Node {best_neighbor} with bid {best_bid}")
     selected_bids_dict.append(best_htlc_bid)
     # for each entry in selected_bids_dict we check if hop count has excedded the max_hop_count
@@ -88,6 +116,7 @@ def outsourcing(pcnn, current_node, destination, amount, alpha, bids, selected_b
                 selected_bids_dict[i].reject(pcnn.payment_channels)
                 pcnn.update_transaction_success(selected_bids_dict[i].src, destination, False)
                 stats['propability_updates'] += 1
+                stats['failed_transactions'] += 1
             selected_bids_dict = selected_bids_dict[:selected_bids_dict.index(htlc_bid)]
             # htlc_bid.reject(pcnn.payment_channels)
             # pcnn.update_transaction_success(htlc_bid.dest, destination, False)
@@ -97,11 +126,16 @@ def outsourcing(pcnn, current_node, destination, amount, alpha, bids, selected_b
         
     # print notifying the next node that is best_neighbor
     print(f"Notifying {best_neighbor} about the transaction.")
-    success = notification(pcnn, best_neighbor, destination, amount, alpha, selected_bids_dict=selected_bids_dict, stats = stats)
-    return success
+    return notification(pcnn, best_neighbor, destination, amount, alpha, selected_bids_dict=selected_bids_dict, stats = stats)
 
 def simulate_transaction(pcnn, source, destination, amount, alpha, selected_bids_dict, stats):
-    success = notification(pcnn, source, destination, amount, alpha, selected_bids_dict, stats)
+    success, flag_retry = notification(pcnn, source, destination, amount, alpha, selected_bids_dict, stats)
+
+    print(success, flag_retry)
+    while flag_retry == 1:
+        # retry the transaction from the source node
+        print("Retrying the transaction from the source node.", source)
+        success, flag_retry = notification(pcnn, source, destination, amount, alpha, selected_bids_dict, stats)
     if success:
         print("Transaction completed successfully.")
     else:
@@ -112,7 +146,7 @@ def simulate_transaction(pcnn, source, destination, amount, alpha, selected_bids
 def run():
     results = []
 
-    num_nodes = [x*4 for x in range(1, 201, 1)]
+    num_nodes = [x*4 for x in range(1,201)]
     num_edges = [2*n - 2 for n in num_nodes]  # sparse graph
 
     for i in range(len(num_nodes)):
@@ -155,7 +189,7 @@ def run():
 
 if __name__ == '__main__':
     df = run()
-    df.to_csv('results_multiplicative_increment.csv', index=False)
+    df.to_csv('second_chance_results_additive_increment.csv', index=False)
 
 
 
