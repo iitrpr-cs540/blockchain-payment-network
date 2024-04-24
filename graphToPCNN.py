@@ -21,13 +21,18 @@ def read_graph(file_path):
         for line in file:
             edge = line.split()
             adj_list.append((int(edge[0]), int(edge[1]), float(edge[2])))
+    
+    print("Graph read successfully.")
     return adj_list
 
 
 def buildPCNN(adj_list):
+    # remove duplicate from adj_list if any
+    adj_list = list(set(adj_list))
     pcnn = PCNN()
     for edge in adj_list:
         pcnn.add_payment_channel(source=str(edge[0]), destination=str(edge[1]), deposit=edge[2])
+    print("PCNN created successfully.")
     return pcnn
 
 def generate_PCNN_from_graph(num_nodes, num_edges):
@@ -38,10 +43,10 @@ def generate_PCNN_from_graph(num_nodes, num_edges):
             print("File does not exist.")
             return
         adj_list = read_graph(file_path)
-        print("Graph read successfully.")
-        draw_graph(adj_list)
+
+        # draw_graph(adj_list) # uncomment to draw the graph
+
         pcnn = buildPCNN(adj_list)
-        print("PCNN created successfully.")
         return pcnn
     except Exception as e:
         print("An error occurred:", str(e))

@@ -1,6 +1,8 @@
 import networkx as nx
 import numpy as np
 
+additive_incerment = True
+
 class NodeProbabilities:
     def __init__(self, node_id: str):
         self.node_id = node_id
@@ -17,9 +19,14 @@ class NodeProbabilities:
             self.total_count[destination] = 20
             self.success_count[destination] = 10
         
-        self.total_count[destination] += 1
-        if success:
-            self.success_count[destination] += 1
+        if additive_incerment: 
+            self.total_count[destination] += 1
+            if success:
+                self.success_count[destination] += 1
+        else:
+            self.total_count[destination]  *= 1.1
+            if success:
+                self.success_count[destination] *=1.21
 
 
 class PCNN:
