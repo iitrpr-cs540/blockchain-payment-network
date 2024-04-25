@@ -12,10 +12,23 @@ if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
 # Function to plot comparison graphs with PCN configurations as x-axis
-def plot_comparison(df1, df2, x_column, y_column, x_label, y_label, title, filename):
+def plot_comparison(df1, df2, x_column, y_column, x_label, y_label, title, filename, show_average=True):
     plt.figure(figsize=(10, 6))
-    plt.plot(df1[x_column], df1[y_column], label='Additive_Algorithm')
-    plt.plot(df2[x_column], df2[y_column], label='Multiplicative_Algorithm')
+    
+    # Plot data for Additive_Algorithm
+    if not df1.empty:
+        plt.plot(df1[x_column], df1[y_column], label='Additive_Algorithm')
+        if show_average:
+            avg_algo1 = df1[y_column].mean()
+            plt.axhline(y=avg_algo1, color='red', linestyle='--', label='Average Additive_Algorithm')
+    
+    # Plot data for Multiplicative_Algorithm
+    if not df2.empty:
+        plt.plot(df2[x_column], df2[y_column], label='Multiplicative_Algorithm')
+        if show_average:
+            avg_algo2 = df2[y_column].mean()
+            plt.axhline(y=avg_algo2, color='blue', linestyle='--', label='Average Multiplicative_Algorithm')
+    
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     plt.title(title)
@@ -77,28 +90,28 @@ def box_plot(df1, df2, x_column, y_column, x_label, y_label, title, filename):
     plt.show()
 
 # Compare total bidding vs. number of nodes
-plot_comparison(df_algo1, df_algo2, 'num_nodes', 'time', 'Number of Nodes', 'Time', 'Time vs Number of Nodes', 'time_vs_number_of_nodes.png')
+plot_comparison(df_algo1, df_algo2, 'num_nodes', 'time', 'Number of Nodes', 'Time', 'Time vs Number of Nodes', 'time_vs_number_of_nodes.png',show_average=True)
 
 # Compare total bidding vs. number of edges
-plot_comparison(df_algo1, df_algo2, 'num_edges', 'time', 'Number of Edges', 'Time', 'Time vs Number of Edges', 'time_vs_number_of_edges.png')
+plot_comparison(df_algo1, df_algo2, 'num_edges', 'time', 'Number of Edges', 'Time', 'Time vs Number of Edges', 'time_vs_number_of_edges.png',show_average=True)
 
 # Compare total bidding vs. number of nodes
-plot_comparison(df_algo1, df_algo2, 'num_nodes', 'total_bidding', 'Number of Nodes', 'Total Bidding', 'Total Bidding vs Number of Nodes', 'total_bidding_vs_number_of_nodes.png')
+plot_comparison(df_algo1, df_algo2, 'num_nodes', 'total_bidding', 'Number of Nodes', 'Total Bidding', 'Total Bidding vs Number of Nodes', 'total_bidding_vs_number_of_nodes.png',show_average=False)
 
 # Compare total bidding vs. number of edges
-plot_comparison(df_algo1, df_algo2, 'num_edges', 'total_bidding', 'Number of Edges', 'Total Bidding', 'Total Bidding vs Number of Edges', 'total_bidding_vs_number_of_edges.png')
+plot_comparison(df_algo1, df_algo2, 'num_edges', 'total_bidding', 'Number of Edges', 'Total Bidding', 'Total Bidding vs Number of Edges', 'total_bidding_vs_number_of_edges.png',show_average=False)
 
 # Compare total outsourcing vs. number of nodes
-plot_comparison(df_algo1, df_algo2, 'num_nodes', 'total_outsourcing', 'Number of Nodes', 'Total Outsourcing', 'Total Outsourcing vs Number of Nodes', 'total_outsourcing_vs_number_of_nodes.png')
+plot_comparison(df_algo1, df_algo2, 'num_nodes', 'total_outsourcing', 'Number of Nodes', 'Total Outsourcing', 'Total Outsourcing vs Number of Nodes', 'total_outsourcing_vs_number_of_nodes.png',show_average=False)
 
 # Compare total outsourcing vs. number of edges
-plot_comparison(df_algo1, df_algo2, 'num_edges', 'total_outsourcing', 'Number of Edges', 'Total Outsourcing', 'Total Outsourcing vs Number of Edges', 'total_outsourcing_vs_number_of_edges.png')
+plot_comparison(df_algo1, df_algo2, 'num_edges', 'total_outsourcing', 'Number of Edges', 'Total Outsourcing', 'Total Outsourcing vs Number of Edges', 'total_outsourcing_vs_number_of_edges.png',show_average=False)
 
 # Compare probability updates vs. number of nodes
-plot_comparison(df_algo1, df_algo2, 'num_nodes', 'propability_updates', 'Number of Nodes', 'Probability Updates', 'Probability Updates vs Number of Nodes', 'probability_updates_vs_number_of_nodes.png')
+plot_comparison(df_algo1, df_algo2, 'num_nodes', 'propability_updates', 'Number of Nodes', 'Probability Updates', 'Probability Updates vs Number of Nodes', 'probability_updates_vs_number_of_nodes.png',show_average=True)
 
 # Compare probability updates vs. number of edges
-plot_comparison(df_algo1, df_algo2, 'num_edges', 'propability_updates', 'Number of Edges', 'Probability Updates', 'Probability Updates vs Number of Edges', 'probability_updates_vs_number_of_edges.png')
+plot_comparison(df_algo1, df_algo2, 'num_edges', 'propability_updates', 'Number of Edges', 'Probability Updates', 'Probability Updates vs Number of Edges', 'probability_updates_vs_number_of_edges.png',show_average=True)
 
 # Scatter plot: Total Bidding vs. Total Outsourcing
 scatter_plot(df_algo1, df_algo2, 'total_bidding', 'total_outsourcing', 'Total Bidding', 'Total Outsourcing', 'Total Bidding vs Total Outsourcing', 'total_bidding_vs_total_outsourcing.png')
