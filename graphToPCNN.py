@@ -44,7 +44,7 @@ def generate_PCNN_from_graph(num_nodes, num_edges):
             return
         adj_list = read_graph(file_path)
 
-        # draw_graph(adj_list) # uncomment to draw the graph
+        draw_graph(adj_list) # uncomment to draw the graph
 
         pcnn = buildPCNN(adj_list)
         return pcnn

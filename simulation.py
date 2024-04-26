@@ -3,6 +3,11 @@ from graphToPCNN import generate_PCNN_from_graph
 from htlc import HTLCBid
 from pcnn import PCNN
 import pandas as pd
+import sys
+import argparse
+
+# increase the recursion limit
+sys.setrecursionlimit(10**6)
 
 ###### TOGGLE THIS VARIABLE TO GIVE SECOND CHANCE TO THE TRANSACTION ######
 give_second_chance = True
@@ -143,11 +148,18 @@ def simulate_transaction(pcnn, source, destination, amount, alpha, selected_bids
     return success
 
 
-def run():
+def run(manual):
+    
+    num_edges = []
+    num_nodes = []
     results = []
 
-    num_nodes = [x*4 for x in range(1,201)]
-    num_edges = [2*n - 2 for n in num_nodes]  # sparse graph
+    if not manual:
+        num_nodes = [x*4 for x in range(1,201)]
+        num_edges = [2*n - 2 for n in num_nodes]  # sparse graph
+    else:
+        num_nodes = [int(input("Enter number of nodes: "))]
+        num_edges = [int(input("Enter number of edges: "))]
 
     for i in range(len(num_nodes)):
         # stats variables
@@ -167,14 +179,19 @@ def run():
         selected_bids_dict = []
         print("Enter source and destination nodes for transaction.")
 
-        ## FOR MANUAL INPUT
-        # source = input("Enter source node: ")
-        # destination = input("Enter destination node: ")
-        # amount = float(input("Enter amount to be transferred: "))
+        source = ''
+        destination = ''
+        amount = 0
+        if manual:
+            ## FOR MANUAL INPUT
+            source = input("Enter source node: ")
+            destination = input("Enter destination node: ")
+            amount = float(input("Enter amount to be transferred: "))
 
-        source = '0'
-        destination  = str(num_nodes[i]-1)
-        amount = 9*num_nodes[i]
+        else:
+            source = '0'
+            destination  = str(num_nodes[i]-1)
+            amount = 9*num_nodes[i]
 
         try:
             time_before = time.time()
@@ -188,7 +205,11 @@ def run():
     return df
 
 if __name__ == '__main__':
-    df = run()
+    parser = argparse.ArgumentParser(description='Run the simulation.')
+    parser.add_argument('--manual', action='store_true', help='Enter graph details manually')
+    manual = parser.parse_args().manual
+
+    df = run(manual)
     df.to_csv('second_chance_results_additive_increment.csv', index=False)
 
 
