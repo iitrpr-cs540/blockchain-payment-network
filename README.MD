@@ -19,4 +19,8 @@
     python automate_graph_gen.py (for generating multiple graphs)
 ```
 
-Run simulation.py
+Run simulation.py to run the simulation on the network
+
+There are two toggle switches present in the code 
+1. (give_second_chance = True)in simulation.py, which allows us to use our proposed second chance algorithm. (Turn to False to use the algorithm implemented in the paper)
+2. (additive_incerment = True) in network.py, which allows one to change probability updation mechanisms (More details in report)
