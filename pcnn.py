@@ -37,7 +37,7 @@ class PCNN:
         self.payment_channels = {}
         self.node_probabilities = {}
 
-    def add_payment_channel(self, source: str, destination: str, deposit: int):
+    def add_payment_channel(self, source: str, destination: str, deposit: int, capacity: int, policy1: dict, policy2: dict):
         channel_id = "-".join(sorted([source, destination]))
         print("Adding channel", channel_id)
         if channel_id in self.payment_channels:
@@ -46,11 +46,12 @@ class PCNN:
         
         self.payment_channels[channel_id] = {
             source: deposit,
-            destination: deposit
+            destination: deposit,
+            capacity: capacity,
         }
 
-        self.G.add_edge(destination, source)
-        self.G.add_edge(source, destination)
+        self.G.add_edge(destination, source, capacity=capacity, policy=policy2)
+        self.G.add_edge(source, destination, capacity=capacity, policy=policy1)
 
         if source not in self.node_probabilities:
             self.node_probabilities[source] = NodeProbabilities(source)
